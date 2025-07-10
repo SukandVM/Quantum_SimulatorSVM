@@ -1,0 +1,282 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Sarvesh Quantum Simulator</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@500&display=swap" rel="stylesheet">
+  <style>
+    body {
+      margin: 0;
+      padding: 0;
+      background: linear-gradient(135deg, #0f2027, #203a43, #2c5364);
+      color: #fff;
+      font-family: 'Segoe UI', sans-serif;
+      overflow-x: hidden;
+    }
+    header {
+      font-family: 'Orbitron', sans-serif;
+      font-size: 2.8rem;
+      text-align: center;
+      padding: 2rem 0;
+      color: #00f7ff;
+      text-shadow: 0 0 10px #00f7ff;
+      animation: fadeInDown 1.2s ease-in-out;
+    }
+    nav a {
+      color: #fff;
+      margin: 0 1rem;
+      font-weight: 500;
+      text-decoration: none;
+      transition: all 0.3s ease;
+    }
+    nav a:hover {
+      color: #00f7ff;
+      text-shadow: 0 0 8px #00f7ff;
+    }
+    .section {
+      background: rgba(255, 255, 255, 0.05);
+      backdrop-filter: blur(8px);
+      border: 1px solid rgba(255, 255, 255, 0.15);
+      border-radius: 16px;
+      margin: 2rem 0;
+      padding: 2rem;
+      box-shadow: 0 0 15px rgba(0, 247, 255, 0.15);
+      animation: fadeInUp 1s ease forwards;
+      opacity: 0;
+      transition: transform 0.4s ease, box-shadow 0.4s ease;
+    }
+    .section:hover {
+      transform: translateY(-4px);
+      box-shadow: 0 0 30px rgba(0, 247, 255, 0.4);
+    }
+    .animated {
+      opacity: 1 !important;
+    }
+    h2, h5 {
+      font-family: 'Orbitron', sans-serif;
+      color: #00f7ff;
+    }
+    .btn-success {
+      background-color: transparent;
+      border: 2px solid #00f7ff;
+      color: #00f7ff;
+      font-weight: bold;
+      box-shadow: 0 0 8px #00f7ff;
+      transition: 0.3s ease;
+    }
+    .btn-success:hover {
+      background-color: #00f7ff;
+      color: #000;
+      box-shadow: 0 0 20px #00f7ff;
+    }
+    table {
+      background: rgba(255,255,255,0.1);
+      color: #fff;
+    }
+    .form-select, .form-control {
+      background-color: #1e1e2f;
+      color: #fff;
+      border: 1px solid #00f7ff;
+    }
+    .form-select:focus, .form-control:focus {
+      box-shadow: 0 0 5px #00f7ff;
+    }
+    @keyframes fadeInDown {
+      from { opacity: 0; transform: translateY(-40px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+    @keyframes fadeInUp {
+      from { opacity: 0; transform: translateY(40px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+  </style>
+</head>
+<body>
+<header>Sarvesh Quantum Simulator</header>
+<nav class="bg-dark text-center py-2">
+  <a href="/">Home</a>
+  <a href="/about">About</a>
+  <a href="/inspiration">Inspiration</a>
+</nav>
+
+<div class="container py-4">
+  <div class="section animated" id="form-section">
+    <form id="quantum-form">
+      <div class="mb-3">
+        <label for="mode" class="form-label">Choose Simulation Mode</label>
+        <select id="mode" name="mode" class="form-select" required>
+          <option value="">Select a Mode</option>
+          <option value="Bell State">Bell State</option>
+          <option value="GHZ State">GHZ State</option>
+          <option value="Shor's Algorithm (15)">Shor's Algorithm (15)</option>
+          <option value="Quantum Fourier Transform (QFT)">Quantum Fourier Transform (QFT)</option>
+          <option value="Custom Qubits + Gates + Bloch Sphere">Custom Qubits + Gates + Bloch Sphere</option>
+        </select>
+      </div>
+
+      <div id="mode-explanation" class="mb-3" style="display: none;">
+        <h5>About this Mode</h5>
+        <p id="explanation-text" class="text-light mb-0"></p>
+      </div>
+
+      <div class="mb-3">
+        <label for="shots" class="form-label">Number of Shots</label>
+        <input type="number" id="shots" name="shots" class="form-control" value="1000" min="100" max="5000" step="100">
+      </div>
+
+      <div id="custom-fields" style="display: none;">
+        <div class="mb-3">
+          <label for="num-qubits" class="form-label">Number of Qubits</label>
+          <input type="number" id="num-qubits" name="num_qubits" class="form-control" value="2" min="1" max="4">
+        </div>
+        <div id="qubit-settings" class="row"></div>
+      </div>
+
+      <button type="submit" class="btn btn-success w-100">Run Simulation</button>
+    </form>
+  </div>
+
+  <div id="output" class="section animated" style="display: none;">
+    <h2>Output</h2>
+    <div id="circuit-image" class="text-center mb-4"></div>
+    <div id="histogram" class="text-center mb-4"></div>
+    <div id="bloch" class="text-center mb-4"></div>
+    <h5>Measurement Probability Table</h5>
+    <div id="data-table"></div>
+    <h5 class="mt-4">Statevector Amplitudes</h5>
+    <div id="statevector-table"></div>
+  </div>
+</div>
+
+<script>
+  const modeInput = document.getElementById("mode");
+  const customFields = document.getElementById("custom-fields");
+  const qubitSettings = document.getElementById("qubit-settings");
+
+  const explanationMap = {
+    "Bell State": "Creates a 2-qubit entangled Bell state using a Hadamard and CNOT gate. It's a foundational quantum entanglement demonstration.",
+    "GHZ State": "Generates a 3-qubit GHZ (Greenberger–Horne–Zeilinger) state where all qubits are fully entangled.",
+    "Shor's Algorithm (15)": "Simulates the period-finding step of Shor's Algorithm, demonstrating how quantum computing can factor numbers.",
+    "Quantum Fourier Transform (QFT)": "Performs a QFT on the input qubits — an essential part of many quantum algorithms like Shor's.",
+    "Custom Qubits + Gates + Bloch Sphere": "Customize qubit states and gates. Visualize Bloch spheres, probability amplitudes, and simulation results."
+  };
+
+  modeInput.addEventListener("change", () => {
+    const selected = modeInput.value;
+    const explanationBox = document.getElementById("mode-explanation");
+    const explanationText = document.getElementById("explanation-text");
+
+    if (explanationMap[selected]) {
+      explanationText.textContent = explanationMap[selected];
+      explanationBox.style.display = "block";
+    } else {
+      explanationBox.style.display = "none";
+    }
+
+    const showCustom = selected === "Custom Qubits + Gates + Bloch Sphere" || selected === "Quantum Fourier Transform (QFT)";
+    customFields.style.display = showCustom ? "block" : "none";
+
+    if (selected === "Custom Qubits + Gates + Bloch Sphere") renderQubitInputs();
+  });
+
+  document.getElementById("num-qubits").addEventListener("change", renderQubitInputs);
+
+  function renderQubitInputs() {
+    const n = parseInt(document.getElementById("num-qubits").value);
+    qubitSettings.innerHTML = "";
+    for (let i = 0; i < n; i++) {
+      qubitSettings.innerHTML += `
+        <div class="col-md-6 mb-3">
+          <label>Qubit ${i} Initial State</label>
+          <select class="form-select init-state" data-index="${i}">
+            <option value="|0>">|0></option>
+            <option value="|1>">|1></option>
+          </select>
+        </div>
+        <div class="col-md-6 mb-3">
+          <label>Qubit ${i} Gate</label>
+          <select class="form-select gate-select" data-index="${i}">
+            <option value="None">None</option>
+            <option value="X">X</option>
+            <option value="Y">Y</option>
+            <option value="Z">Z</option>
+            <option value="H">H</option>
+            <option value="S">S</option>
+            <option value="T">T</option>
+            <option value="RX(PI/2)">RX(PI/2)</option>
+            <option value="CX">CX</option>
+          </select>
+        </div>
+        <div class="col-12 mb-3 control-select" style="display:none;" id="control-${i}">
+          <label>Control Qubit for CX (Target: ${i})</label>
+          <input type="number" min="0" max="${n - 1}" class="form-control cx-control" data-index="${i}">
+        </div>`;
+    }
+
+    document.querySelectorAll(".gate-select").forEach(sel => {
+      sel.addEventListener("change", e => {
+        const index = e.target.dataset.index;
+        const show = e.target.value === "CX";
+        document.getElementById(`control-${index}`).style.display = show ? "block" : "none";
+      });
+    });
+  }
+
+  document.getElementById("quantum-form").addEventListener("submit", async function (e) {
+    e.preventDefault();
+    const mode = modeInput.value;
+    const shots = parseInt(document.getElementById("shots").value);
+    const payload = { mode, shots };
+
+    if (mode === "Custom Qubits + Gates + Bloch Sphere") {
+      const n = parseInt(document.getElementById("num-qubits").value);
+      payload.num_qubits = n;
+      payload.initial_states = [...document.querySelectorAll(".init-state")].map(el => el.value);
+      payload.gates = [...document.querySelectorAll(".gate-select")].map(el => el.value);
+      payload.cx_controls = [...document.querySelectorAll(".cx-control")].map(el => el.value || 0);
+    } else if (mode === "Quantum Fourier Transform (QFT)") {
+      payload.num_qubits = parseInt(document.getElementById("num-qubits").value);
+    }
+
+    const res = await fetch("/simulate", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(payload)
+    });
+
+    const data = await res.json();
+
+    document.getElementById("output").style.display = "block";
+    document.getElementById("circuit-image").innerHTML = `<img src="data:image/png;base64,${data.circuit}" class="img-fluid"/>`;
+    document.getElementById("histogram").innerHTML = `<img src="data:image/png;base64,${data.histogram}" class="img-fluid"/>`;
+    document.getElementById("bloch").innerHTML = data.bloch ? `<img src="data:image/png;base64,${data.bloch}" class="img-fluid"/>` : "";
+    renderTable("data-table", data.table);
+    renderTable("statevector-table", data.statevector);
+  });
+
+  function renderTable(containerId, rows) {
+    if (!rows || rows.length === 0) return;
+    let table = `<table class="table table-bordered table-hover mt-3"><thead><tr>`;
+    Object.keys(rows[0]).forEach(key => table += `<th>${key}</th>`);
+    table += `</tr></thead><tbody>`;
+    rows.forEach(row => {
+      table += `<tr>`;
+      Object.values(row).forEach(cell => table += `<td>${cell}</td>`);
+      table += `</tr>`;
+    });
+    table += `</tbody></table>`;
+    document.getElementById(containerId).innerHTML = table;
+  }
+
+  window.onload = () => {
+    document.querySelectorAll(".section").forEach((el, i) => {
+      setTimeout(() => el.classList.add("animated"), i * 200);
+    });
+  };
+</script>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>
