@@ -37,7 +37,26 @@ def simulate():
     backend = Aer.get_backend("qasm_simulator")
     result_dict = {}
 
-    if mode == "Bell State":
+    if mode == "Grover's Algorithm":
+        # Grover's Algorithm for 2 qubits: Search for |11>
+        qc = QuantumCircuit(2, 2)
+        qc.h([0, 1])  # Superposition
+
+        # Oracle for |11>: Z on both and CZ
+        qc.cz(0, 1)
+
+        # Diffusion operator
+        qc.h([0, 1])
+        qc.x([0, 1])
+        qc.h(1)
+        qc.cx(0, 1)
+        qc.h(1)
+        qc.x([0, 1])
+        qc.h([0, 1])
+
+        qc.measure([0, 1], [0, 1])
+
+    elif mode == "Bell State":
         qc = QuantumCircuit(2, 2)
         qc.h(0)
         qc.cx(0, 1)
@@ -117,7 +136,7 @@ def simulate():
     else:
         return jsonify({"error": "Invalid simulation mode."})
 
-    # For Bell, GHZ, QFT modes:
+    # For Bell, GHZ, QFT, Grover modes:
     result = backend.run(transpile(qc), shots=shots).result()
     counts = result.get_counts()
 

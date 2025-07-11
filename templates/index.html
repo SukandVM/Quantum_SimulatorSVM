@@ -108,6 +108,7 @@
         <label for="mode" class="form-label">Choose Simulation Mode</label>
         <select id="mode" name="mode" class="form-select" required>
           <option value="">Select a Mode</option>
+           <option value="Grover's Algorithm">Grover's Algorithm</option>
           <option value="Bell State">Bell State</option>
           <option value="GHZ State">GHZ State</option>
           <option value="Shor's Algorithm (15)">Shor's Algorithm (15)</option>
@@ -156,6 +157,7 @@
   const qubitSettings = document.getElementById("qubit-settings");
 
   const explanationMap = {
+    "Grover's Algorithm": "Implements Grover's Search to find a target state (|11⟩) among 2-qubit combinations using an oracle and diffuser.",
     "Bell State": "Creates a 2-qubit entangled Bell state using a Hadamard and CNOT gate. It's a foundational quantum entanglement demonstration.",
     "GHZ State": "Generates a 3-qubit GHZ (Greenberger–Horne–Zeilinger) state where all qubits are fully entangled.",
     "Shor's Algorithm (15)": "Simulates the period-finding step of Shor's Algorithm, demonstrating how quantum computing can factor numbers.",
