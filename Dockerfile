@@ -8,9 +8,12 @@ ENV PYTHONUNBUFFERED=1
 # Set work directory inside container
 WORKDIR /app
 
-# Install OS dependencies
+# Install OS dependencies (add cmake, ninja, and libatlas-base-dev for qiskit-aer)
 RUN apt-get update && apt-get install -y \
     build-essential \
+    cmake \
+    ninja-build \
+    libatlas-base-dev \
     graphviz \
     libglib2.0-0 \
     libsm6 \
